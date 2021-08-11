@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "keyboardcrusader.locations.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "refmap": "locations.refmap.json",
+  "mixins": [
+    "MapDataMixin"
+  ],
+  "client":[
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "minVersion": "0.8"
+}
+

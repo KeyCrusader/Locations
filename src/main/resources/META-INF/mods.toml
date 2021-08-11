@@ -1,0 +1,41 @@
+modLoader = "javafml" #mandatory
+loaderVersion = "[36,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+license = "All rights reserved"
+[[mods]] #mandatory
+modId = "locations" #mandatory
+version = "${file.jarVersion}" #mandatory
+displayName = "Locations" #mandatory
+description = '''
+Discovery events for locations and stores information about them to be used within other mods
+'''
+# A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
+[[dependencies.locations]] #optional
+modId = "forge" #mandatory
+mandatory = true #mandatory
+versionRange = "[36,)" #mandatory
+ordering = "NONE"
+side = "BOTH"
+[[dependencies.locations]]
+modId = "minecraft"
+mandatory = true
+versionRange = "[1.16.5,1.17)"
+ordering = "NONE"
+side = "BOTH"
+[[dependencies.locations]]
+modId = "cloth-config"
+mandatory = true
+versionRange = "[v5.0.37,)"
+ordering = "NONE"
+side = "CLIENT"
+[[dependencies.locations]]
+modId = "selene"
+mandatory = false
+versionRange = "[1.5,)"
+ordering = "NONE"
+side = "BOTH"
+[[dependencies.locations]]
+modId = "antiqueatlas"
+mandatory = false
+versionRange = "[6.0.1,)"
+ordering = "NONE"
+side = "BOTH"

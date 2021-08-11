@@ -1,0 +1,113 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = 'https://repo.spongepowered.org/repository/maven-public/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '4.1.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
+
+group = "keyboardcrusader"
+version = "${mod_version}-${mc_version}"
+archivesBaseName = "${modid}"
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(8) // Mojang ships Java 8 to end users, so your mod should target Java 8.
+
+minecraft {
+    mappings channel: "snapshot", version: "${mapping}-${mcp_version}"
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            arg "-mixin.config="+archivesBaseName+".mixins.json"
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+
+            mods {
+                locations {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        server {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            arg "-mixin.config="+archivesBaseName+".mixins.json"
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+
+            mods {
+                locations {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+
+mixin {
+    add sourceSets.main, "${modid}.refmap.json"
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+    maven { url "https://cursemaven.com" } // Curseforge Mods
+    maven { url "https://nexus.resourcefulbees.com/repository/maven-public/"} // Repurposed Structures
+    maven { url "https://maven.shedaniel.me/" } // Cloth Config API
+}
+
+dependencies {
+    minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
+
+    implementation fg.deobf("curse.maven:waystones-245755:3332276")
+    implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:4.11.26")
+    implementation fg.deobf("curse.maven:selene-499980:3392984")
+    implementation fg.deobf("curse.maven:antique-atlas-227795:3398190")
+
+    runtimeOnly fg.deobf("com.telepathicgrunt:RepurposedStructures:1.16.5-2.7.12-forge")
+
+    runtimeOnly fg.deobf("curse.maven:structure_gel-378802:3268432")
+    runtimeOnly fg.deobf("curse.maven:dungeons_plus-377794:3318948")
+
+    runtimeOnly fg.deobf("curse.maven:valhelsia-core-416935:3338808")
+    runtimeOnly fg.deobf("curse.maven:valhelsia-structures-347488:3396812")
+
+    runtimeOnly fg.deobf("curse.maven:stoneholm-forge-461822:3337788")
+
+    runtimeOnly fg.deobf("curse.maven:towers-of-the-wild-386415:3103750")
+
+    runtimeOnly fg.deobf("curse.maven:yungs-api-421850:3386962")
+    runtimeOnly fg.deobf("curse.maven:yungs-better-caves-340583:3307879")
+    runtimeOnly fg.deobf("curse.maven:yungs-better-mineshafts-forge-389665:3344719")
+    runtimeOnly fg.deobf("curse.maven:yungs-better-strongholds-465575:3386965")
+    runtimeOnly fg.deobf("curse.maven:yungs-extras-480006:3303283")
+}
+
+jar {
+    manifest {
+        attributes([
+                "Specification-Title"     : "${modid}",
+                "Specification-Vendor"    : "keyboardcrusader",
+                "Specification-Version"   : "1", // We are version 1 of ourselves
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : "${archiveVersion}",
+                "Implementation-Vendor"   : "keyboardcrusader",
+                "MixinConfigs"            : "${modid}.mixins.json",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy('reobfJar')
