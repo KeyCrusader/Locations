@@ -1,14 +1,14 @@
 package keyboardcrusader.locations.generators;
 
-import keyboardcrusader.locations.Locations;
+import keyboardcrusader.locations.api.NameGenerator;
 import net.minecraft.util.ResourceLocation;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class NoneNameGenerator extends BaseNameGenerator {
-    public NoneNameGenerator(ResourceLocation id) {
-        super(id);
+public class NoneNameGenerator extends NameGenerator {
+    public NoneNameGenerator(String name) {
+        super(name);
     }
 
     @Override

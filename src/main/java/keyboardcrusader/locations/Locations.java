@@ -1,12 +1,8 @@
 package keyboardcrusader.locations;
 
-import keyboardcrusader.locations.api.NameGenerators;
 import keyboardcrusader.locations.config.LocationsConfig;
 import keyboardcrusader.locations.events.forge.ServerForgeEventHandler;
-import keyboardcrusader.locations.generators.*;
-import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.ExtensionPoint;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -25,19 +21,12 @@ public class Locations {
 
     public Locations() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, LocationsConfig.clientSpec);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, LocationsConfig.serverSpec);
-        ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.CONFIGGUIFACTORY, () -> (client, parent) -> LocationsConfig.getClothConfig().setParentScreen(parent).build());
-
-        NameGenerators.register(new NoneNameGenerator(new ResourceLocation(Locations.MODID, "none")));
-        NameGenerators.register(new VillageNameGenerator(new ResourceLocation(Locations.MODID, "village")));
-        NameGenerators.register(new CastleNameGenerator(new ResourceLocation(Locations.MODID, "castle")));
-        NameGenerators.register(new UndergroundVillageNameGenerator(new ResourceLocation(Locations.MODID, "underground_village")));
-        NameGenerators.register(new MineshaftNameGenerator(new ResourceLocation(Locations.MODID, "mineshaft")));
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, LocationsConfig.commonSpec);
 
         if (ModList.get().isLoaded("waystones")) {
             MinecraftForge.EVENT_BUS.register(ServerForgeEventHandler.WaystoneServerForgeEventHandler.class);
         }
-        LocationsConfig.SERVER.SELENE_LOADED = ModList.get().isLoaded("selene");
-        LocationsConfig.SERVER.ANTIQUE_ATLAS_LOADED = ModList.get().isLoaded("antiqueatlas");
+        LocationsConfig.COMMON.SELENE_LOADED = ModList.get().isLoaded("selene");
+        LocationsConfig.COMMON.ANTIQUE_ATLAS_LOADED = ModList.get().isLoaded("antiqueatlas");
     }
 }

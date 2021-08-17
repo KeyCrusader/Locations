@@ -10,16 +10,24 @@ import net.minecraftforge.common.ForgeConfigSpec;
 
 import java.util.*;
 
-public class Client {
+public class Common {
+    public boolean SELENE_LOADED;
+    public boolean ANTIQUE_ATLAS_LOADED;
+    public final ForgeConfigSpec.BooleanValue DEATH_LOCATION;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> structure_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> map_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> feature_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> poi_info;
 
-    Client(ForgeConfigSpec.Builder builder) {
-        builder.comment("Configuration for Locations").push("Client");
+    Common(ForgeConfigSpec.Builder builder) {
+        builder.comment("Configuration for Locations").push("Common");
 
         builder.push("General");
+
+        DEATH_LOCATION = builder
+                .comment("Death location")
+                .translation("config.locations.death")
+                .define("death_location", true);
 
         structure_info = builder
                 .comment("Location settings")
@@ -43,16 +51,16 @@ public class Client {
     }
 
     public void serialize() {
-        structure_info.set(LocationsRegistry.STRUCTURES.serializeClient());
-        map_info.set(LocationsRegistry.MAP_MARKERS.serializeClient());
-        feature_info.set(LocationsRegistry.FEATURES.serializeClient());
-        poi_info.set(LocationsRegistry.POIS.serializeClient());
+        structure_info.set(LocationsRegistry.STRUCTURES.serializeCommon());
+        map_info.set(LocationsRegistry.MAP_MARKERS.serializeCommon());
+        feature_info.set(LocationsRegistry.FEATURES.serializeCommon());
+        poi_info.set(LocationsRegistry.POIS.serializeCommon());
     }
 
     public void deserialize() {
-        LocationsRegistry.STRUCTURES.deserializeClient(structure_info.get(), StructureInfo::new);
-        LocationsRegistry.MAP_MARKERS.deserializeClient(map_info.get(), MapInfo::new);
-        LocationsRegistry.FEATURES.deserializeClient(feature_info.get(), FeatureInfo::new);
-        LocationsRegistry.POIS.deserializeClient(poi_info.get(), POIInfo::new);
+        LocationsRegistry.STRUCTURES.deserializeCommon(structure_info.get(), StructureInfo::new);
+        LocationsRegistry.MAP_MARKERS.deserializeCommon(map_info.get(), MapInfo::new);
+        LocationsRegistry.FEATURES.deserializeCommon(feature_info.get(), FeatureInfo::new);
+        LocationsRegistry.POIS.deserializeCommon(poi_info.get(), POIInfo::new);
     }
 }

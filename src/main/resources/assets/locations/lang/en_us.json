@@ -1,18 +1,37 @@
 {
   "locations.config.title": "Locations",
+
   "locations.config.general": "General",
+  "locations.config.structures": "Structures",
+  "locations.config.map": "Map Markers",
+  "locations.config.features": "Features",
+  "locations.config.poi": "Points of Interest",
+
   "locations.config.death_location": "Enable death location",
-  "locations.config.disabled": "Disable location",
-  "locations.config.render_distance": "Render distance",
-  "locations.config.square_bounds": "Use square bounds",
-  "locations.config.name_generator": "Name generator",
-  "locations.config.icon": "Icon",
-  "locations.config.xp_modifier": "XP modifier",
   "locations.config.death_location.tooltip": "Location created on death and removed once entered again",
+
+  "locations.config.disabled": "Disable location",
   "locations.config.disabled.tooltip": "Disable the discovery of this location",
+
+  "locations.config.render_distance": "Render distance",
   "locations.config.render_distance.tooltip": "Distance to render this location from if used with other mods",
+
+  "locations.config.atlas_marker": "Atlas Marker",
+  "locations.config.atlas_marker.tooltip": "Marker to add to Antique Atlas (if installed)",
+
+  "locations.config.square_bounds": "Use square bounds",
   "locations.config.square_bounds.tooltip": "Use the chunk bounds instead of accurate piece bounds, useful for villages and other locations with gaps between parts",
+
+  "locations.config.name_generator": "Name generator",
   "locations.config.name_generator.tooltip": "Name generator to use for this location",
-  "locations.config.icon.tooltip": "Icon to associate with this location",
-  "locations.config.xp_modifier.tooltip": "XP modifier to use on discovery of this location"
+
+  "locations.config.xp_modifier": "XP modifier",
+  "locations.config.xp_modifier.tooltip": "XP modifier to use on discovery of this location",
+
+  "locations.config.connected": "Connected",
+  "locations.config.connected.tooltip": "Is this a multi block point, e.g. portal?",
+
+  "locations.config.inLocation": "In location",
+  "locations.config.inLocation.tooltip": "Is the POI in a location, e.g. a villager workstation"
+
 }

@@ -1,6 +1,5 @@
 package keyboardcrusader.locations.capability;
 
-import keyboardcrusader.locations.Locations;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.nbt.INBT;
 import net.minecraft.nbt.ListNBT;
@@ -10,8 +9,8 @@ import net.minecraftforge.common.capabilities.CapabilityInject;
 import net.minecraftforge.common.capabilities.CapabilityManager;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 public class LocationsCap implements ILocationsCap {
     @CapabilityInject(ILocationsCap.class)
@@ -34,94 +33,70 @@ public class LocationsCap implements ILocationsCap {
 
     }
 
-
-    private List<Location> locations = new ArrayList<>();
-    private long current = 0;
-
-    @Override
-    public boolean inLocation() {
-        return !(currentLocation() == null);
-    }
+    private Long currentLocationID = 0L;
+    private Map<Long, Location> locations = new HashMap<>();
 
     @Override
     public Long currentLocation() {
-        return current;
+        return currentLocationID;
     }
 
     @Override
     public void setCurrentLocation(Long id) {
-        current = id;
-    }
-    @Override
-    public void setCurrentLocation(Location location) {
-        setCurrentLocation(location.getID());
+        currentLocationID = id;
     }
 
     @Override
     public Location get(Long id) {
-        for (Location location : locations) {
-            if (location.getID() == id) {
-                return location;
-            }
-        }
-        return null;
+        return locations.get(id);
     }
+
     @Override
-    public List<Location> get() {
+    public Map<Long, Location> getAll() {
         return locations;
     }
 
     @Override
-    public void set(List<Location> locations) {
+    public void setAll(Map<Long, Location> locations) {
         this.locations = locations;
     }
 
     @Override
-    public void discover(Location location) {
-        if (!isDiscovered(location.getID())) {
-            locations.add(location);
+    public boolean discover(Long id, Location location) {
+        if (!isDiscovered(id)) {
+            locations.put(id, location);
+            return true;
         }
-        else {
-            update(location);
-        }
+        return false;
     }
 
     @Override
-    public void update(Location location) {
-        if (!isDiscovered(location.getID())) {
-            discover(location);
+    public boolean update(Long id, Location location) {
+        if (isDiscovered(id)) {
+            locations.put(id, location);
+            return true;
         }
-        else {
-            get(location.getID()).update(location);
-        }
+        return false;
     }
 
     @Override
-    public void remove(Location location) {
-        if (!isDiscovered(location)) return;
-        locations.remove(location);
-    }
-    @Override
-    public void remove(Long id) {
-        remove(get(id));
+    public boolean remove(Long id, Location location) {
+        if (isDiscovered(id)) {
+            return locations.remove(id, location);
+        }
+        return false;
     }
 
-    @Override
-    public boolean isDiscovered(Location location) {
-        return isDiscovered(location.getID());
-    }
     @Override
     public boolean isDiscovered(Long id) {
-        return !(get(id) == null);
+        return locations.containsKey(id);
     }
 
     @Override
     public ListNBT serializeNBT() {
         ListNBT listNBT = new ListNBT();
-        for (Location location : locations) {
-            if (location.getSource() != Location.Source.MAP) {
-                listNBT.add(location.serialize());
-            }
+        for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
+            listNBT.add(mapEntry.getValue().serialize(mapEntry.getKey()));
         }
         return listNBT;
     }
@@ -129,7 +104,8 @@ public class LocationsCap implements ILocationsCap {
     @Override
     public void deserializeNBT(ListNBT nbt) {
         for (INBT inbt : nbt) {
-            locations.add(new Location((CompoundNBT) inbt));
+            CompoundNBT compoundNBT = (CompoundNBT) inbt;
+            locations.put(compoundNBT.getLong("id"), new Location(compoundNBT));
         }
     }
 }

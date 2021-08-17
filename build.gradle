@@ -70,29 +70,14 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
+    if (System.getProperty("idea.sync.active") != "true") {
+        annotationProcessor 'org.spongepowered:mixin:0.8.2:processor'
+    }
 
     implementation fg.deobf("curse.maven:waystones-245755:3332276")
     implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:4.11.26")
     implementation fg.deobf("curse.maven:selene-499980:3392984")
     implementation fg.deobf("curse.maven:antique-atlas-227795:3398190")
-
-    runtimeOnly fg.deobf("com.telepathicgrunt:RepurposedStructures:1.16.5-2.7.12-forge")
-
-    runtimeOnly fg.deobf("curse.maven:structure_gel-378802:3268432")
-    runtimeOnly fg.deobf("curse.maven:dungeons_plus-377794:3318948")
-
-    runtimeOnly fg.deobf("curse.maven:valhelsia-core-416935:3338808")
-    runtimeOnly fg.deobf("curse.maven:valhelsia-structures-347488:3396812")
-
-    runtimeOnly fg.deobf("curse.maven:stoneholm-forge-461822:3337788")
-
-    runtimeOnly fg.deobf("curse.maven:towers-of-the-wild-386415:3103750")
-
-    runtimeOnly fg.deobf("curse.maven:yungs-api-421850:3386962")
-    runtimeOnly fg.deobf("curse.maven:yungs-better-caves-340583:3307879")
-    runtimeOnly fg.deobf("curse.maven:yungs-better-mineshafts-forge-389665:3344719")
-    runtimeOnly fg.deobf("curse.maven:yungs-better-strongholds-465575:3386965")
-    runtimeOnly fg.deobf("curse.maven:yungs-extras-480006:3303283")
 }
 
 jar {

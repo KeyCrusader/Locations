@@ -4,9 +4,12 @@
   "compatibilityLevel": "JAVA_8",
   "refmap": "locations.refmap.json",
   "mixins": [
-    "MapDataMixin"
+    "ConfiguredFeatureMixin",
+    "MapDataMixin",
+    "ServerWorldMixin",
+    "StructureManagerMixin"
   ],
-  "client":[
+  "client": [
   ],
   "injectors": {
     "defaultRequire": 1

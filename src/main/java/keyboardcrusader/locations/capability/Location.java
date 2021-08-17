@@ -1,59 +1,117 @@
 package keyboardcrusader.locations.capability;
 
+import keyboardcrusader.locations.LocationsRegistry;
+import keyboardcrusader.locations.config.type.LocationInfo;
+import keyboardcrusader.locations.config.type.StructureInfo;
 import net.minecraft.nbt.CompoundNBT;
+import net.minecraft.nbt.INBT;
+import net.minecraft.nbt.IntArrayNBT;
+import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MutableBoundingBox;
+import net.minecraft.util.math.vector.Vector3i;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.village.PointOfInterestType;
 import net.minecraft.world.World;
-import net.minecraft.world.gen.feature.structure.Structure;
+import net.minecraft.world.gen.feature.Feature;
+import net.minecraft.world.gen.feature.structure.StructurePiece;
+import net.minecraft.world.gen.feature.structure.StructureStart;
+import net.minecraft.world.server.ServerWorld;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Location {
-    private final long id;
     private BlockPos position;
     private RegistryKey<World> dimension;
     private String name;
     private ResourceLocation type;
-    private MutableBoundingBox bounds;
+    private List<MutableBoundingBox> bounds = new ArrayList<>();
+    private MutableBoundingBox maxBounds;
     private Source source;
 
-    public Location(long id, BlockPos position, RegistryKey<World> dimension, String name, ResourceLocation type, MutableBoundingBox bounds, Source source) {
-        this.id = id;
+    /**
+     * Used for syncing with packets, shouldn't be used to generate any new locations
+     */
+    public Location(BlockPos position, RegistryKey<World> dimension, String name, ResourceLocation type, List<MutableBoundingBox> bounds, MutableBoundingBox maxBounds, Source source) {
         this.position = position;
         this.dimension = dimension;
         this.name = name;
         this.type = type;
         this.bounds = bounds;
+        this.maxBounds = maxBounds;
         this.source = source;
     }
-    public Location(BlockPos position, RegistryKey<World> dimension, String name, ResourceLocation type, MutableBoundingBox bounds, Source source) {
-        this(generateID(position, dimension, type), position, dimension, name, type, bounds, source);
+
+    public Location(StructureStart<?> structureStart, World world) {
+        structureStart.getComponents().forEach(structurePiece -> this.bounds.add(structurePiece.getBoundingBox()));
+        this.maxBounds = structureStart.getBoundingBox();
+        this.source = Source.STRUCTURE;
+        this.dimension = world.getDimensionKey();
+        this.type = structureStart.getStructure().getRegistryName();
+        this.position = getPosition(structureStart.getComponents().get(0));
+        this.name = ((StructureInfo) getInfo()).getNameGenerator().generateName(this.type, world.getBiome(position).getTemperature());
     }
-    public Location(BlockPos position, RegistryKey<World> dimension, String name, Structure<?> type, MutableBoundingBox bounds, Source source) {
-        this(position, dimension, name, type.getStructure().getRegistryName(), bounds, source);
+
+    public Location(Feature<?> feature, World world, BlockPos pos) {
+        this.name = LocationsRegistry.NAME_GENERATORS.getValue(LocationsRegistry.NAME_GENERATORS.getDefaultKey()).generateName(feature.getRegistryName(), 1.0F);
+        this.source = Source.FEATURE;
+        this.dimension = world.getDimensionKey();
+        this.type = feature.getRegistryName();
+        this.position = pos;
+        this.maxBounds = new MutableBoundingBox(
+                pos.getX() - 5,
+                pos.getY() - 5,
+                pos.getZ() - 5,
+                pos.getX() + 5,
+                pos.getY() + 5,
+                pos.getZ() + 5);
+        this.bounds.add(this.maxBounds);
+    }
+
+    public Location(PointOfInterestType type, ServerWorld world, BlockPos pos) {
+        this.name = LocationsRegistry.NAME_GENERATORS.getValue(LocationsRegistry.NAME_GENERATORS.getDefaultKey()).generateName(type.getRegistryName(), 1.0F);
+        this.source = Source.POI;
+        this.dimension = world.getDimensionKey();
+        this.type = type.getRegistryName();
+        this.position = pos;
+        this.maxBounds = new MutableBoundingBox(pos, pos);
+        this.bounds.add(this.maxBounds);
+    }
+
+    public Location(PointOfInterestType type, ServerWorld world, BlockPos pos, boolean permanent) {
+        this.name = LocationsRegistry.NAME_GENERATORS.getValue(LocationsRegistry.NAME_GENERATORS.getDefaultKey()).generateName(type.getRegistryName(), 1.0F);
+        this.source = Source.PERMANENT_POI;
+        this.dimension = world.getDimensionKey();
+        this.type = type.getRegistryName();
+        this.position = pos;
+        this.maxBounds = new MutableBoundingBox(
+                pos.getX() - 5,
+                pos.getY() - 5,
+                pos.getZ() - 5,
+                pos.getX() + 5,
+                pos.getY() + 5,
+                pos.getZ() + 5);
+        this.bounds.add(this.maxBounds);
     }
 
     public Location(CompoundNBT nbt) {
-        this.id = nbt.getLong("id");
         this.position = BlockPos.fromLong(nbt.getLong("position"));
         this.dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(nbt.getString("dimension")));
         this.name = nbt.getString("name");
         this.type = new ResourceLocation(nbt.getString("type"));
-        this.bounds = new MutableBoundingBox(nbt.getIntArray("bounds"));
         this.source = Source.values()[nbt.getInt("source")];
-    }
-
-    public long getID() {
-        return this.id;
+        this.maxBounds = new MutableBoundingBox(nbt.getIntArray("maxBounds"));
+        ListNBT boundsNBT = (ListNBT) nbt.get("bounds");
+        for (INBT inbt : boundsNBT) {
+            this.bounds.add(new MutableBoundingBox(((IntArrayNBT) inbt).getIntArray()));
+        }
     }
 
     public BlockPos getPosition() {
         return position;
-    }
-
-    public BlockPos getCenter() {
-        return new BlockPos(this.getBounds().minX + (this.getBounds().getXSize() / 2), this.getBounds().minY + (this.getBounds().getYSize() / 2), this.getBounds().minZ + (this.getBounds().getZSize() / 2));
     }
 
     public RegistryKey<World> getDimension() {
@@ -68,12 +126,29 @@ public class Location {
         return this.type;
     }
 
-    public MutableBoundingBox getBounds() {
+    public MutableBoundingBox getMaxBounds() {
+        return this.maxBounds;
+    }
+
+    public List<MutableBoundingBox> getBounds() {
         return this.bounds;
     }
 
     public Source getSource() {
         return this.source;
+    }
+
+    public boolean isVecInside(Vector3i vec) {
+        if (getSource() == Source.STRUCTURE && ((StructureInfo) getInfo()).useSquareBounds()) {
+            return this.maxBounds.isVecInside(vec);
+        }
+
+        for (MutableBoundingBox boundingBox : this.getBounds()) {
+            if (boundingBox.isVecInside(vec)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void update(Location location) {
@@ -94,18 +169,39 @@ public class Location {
         }
     }
 
-    public CompoundNBT serialize() {
+    public CompoundNBT serialize(Long id) {
         CompoundNBT nbt = new CompoundNBT();
 
-        nbt.putLong("id", this.getID());
+        nbt.putLong("id", id);
         nbt.putLong("position", this.getPosition().toLong());
         nbt.putString("dimension", this.getDimension().getLocation().toString());
         nbt.putString("name", this.getName());
         nbt.putString("type", this.getType().toString());
-        nbt.putIntArray("bounds", this.getBounds().toNBTTagIntArray().getIntArray());
         nbt.putInt("source", this.getSource().ordinal());
+        nbt.putIntArray("maxBounds", this.getMaxBounds().toNBTTagIntArray().getIntArray());
+
+        ListNBT boundsNBT = new ListNBT();
+        for (MutableBoundingBox bounds : this.getBounds()) {
+            boundsNBT.add(bounds.toNBTTagIntArray());
+        }
+        nbt.put("bounds", boundsNBT);
 
         return nbt;
+    }
+
+    public LocationInfo getInfo() {
+        switch(getSource()) {
+            case STRUCTURE:
+                return LocationsRegistry.STRUCTURES.get(getType());
+            case FEATURE:
+                return LocationsRegistry.FEATURES.get(getType());
+            case MAP:
+                return LocationsRegistry.MAP_MARKERS.get(getType());
+            case POI:
+            case PERMANENT_POI:
+                return LocationsRegistry.POIS.get(getType());
+        }
+        return null;
     }
 
     @Override
@@ -114,10 +210,6 @@ public class Location {
         if (!(o instanceof Location)) return false;
 
         Location l = (Location) o;
-        if (l.getID() != this.getID()) {
-            //Locations.LOGGER.debug("ID mismatch");
-            return false;
-        }
         if (!l.getPosition().equals(this.getPosition())) {
             //Locations.LOGGER.debug("Position mismatch");
             return false;
@@ -144,16 +236,26 @@ public class Location {
 
     @Override
     public String toString() {
-        return this.getID() + ":" + this.getName();
+        return this.getName() + ":" + this.getPosition();
+    }
+    
+    public static BlockPos getPosition(StructurePiece structurePiece) {
+        return new BlockPos(
+                structurePiece.getBoundingBox().minX + (structurePiece.getBoundingBox().getXSize() / 2),
+                structurePiece.getBoundingBox().minY + (structurePiece.getBoundingBox().getYSize() / 2),
+                structurePiece.getBoundingBox().minZ + (structurePiece.getBoundingBox().getZSize() / 2));
     }
 
-    public static long generateID(BlockPos position, RegistryKey<World> dimension, ResourceLocation type) {
+    public static Long generateID(ResourceLocation type, RegistryKey<World> dimension, BlockPos position) {
         return (Math.abs(type.hashCode()) + Math.abs(dimension.getLocation().hashCode()) + Math.abs(position.toLong())) % Long.MAX_VALUE;
     }
 
     public enum Source {
-        WORLD,
+        STRUCTURE,
         MAP,
+        FEATURE,
+        POI,
+        PERMANENT_POI,
         DEATH
     }
 }

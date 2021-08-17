@@ -15,12 +15,18 @@ public class PlayerLocationEvent extends Event {
         return playerEntity;
     }
 
+    /**
+     * Called whenever a player leaves a location
+     */
     public static class Leave extends PlayerLocationEvent {
         public Leave(PlayerEntity playerEntity) {
             super(playerEntity);
         }
     }
 
+    /**
+     * Called whenever a player enters a location
+     */
     public static class Enter extends PlayerLocationEvent {
         private final Location location;
 

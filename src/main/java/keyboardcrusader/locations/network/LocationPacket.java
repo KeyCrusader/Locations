@@ -1,6 +1,5 @@
 package keyboardcrusader.locations.network;
 
-import com.google.common.collect.Lists;
 import keyboardcrusader.locations.api.LocationHelper;
 import keyboardcrusader.locations.capability.Location;
 import keyboardcrusader.locations.capability.LocationsCap;
@@ -13,53 +12,66 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 public class LocationPacket implements IPacket {
-    private final List<Location> locations;
+    private final Map<Long, Location> locations;
     private final PacketType packetType;
 
-    public LocationPacket(Location location, PacketType packetType) {
-        this.locations = Lists.newArrayList(location);
+    public LocationPacket(Long id, Location location, PacketType packetType) {
+        this.locations = new HashMap<>();
+        this.locations.put(id, location);
         this.packetType = packetType;
     }
-    public LocationPacket(List<Location> locations, PacketType packetType) {
+    public LocationPacket(Map<Long, Location> locations, PacketType packetType) {
         this.locations = locations;
         this.packetType = packetType;
     }
 
     public LocationPacket(PacketBuffer buf) {
         int count = buf.readInt();
-        this.locations = new ArrayList<>();
+        this.locations = new HashMap<>();
         for (int i = 0; i < count; i++) {
-            locations.add(new Location(
-                    buf.readLong(),
-                    BlockPos.fromLong(buf.readLong()),
-                    RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(buf.readString())),
-                    buf.readString(),
-                    new ResourceLocation(buf.readString()),
-                    new MutableBoundingBox(buf.readVarIntArray()),
-                    Location.Source.values()[buf.readInt()]
-            ));
+            Long id = buf.readLong();
+            BlockPos pos = BlockPos.fromLong(buf.readLong());
+            RegistryKey<World> dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(buf.readString()));
+            String name = buf.readString();
+            ResourceLocation type = ResourceLocation.tryCreate(buf.readString());
+            MutableBoundingBox maxBounds = new MutableBoundingBox(buf.readVarIntArray());
+            List<MutableBoundingBox> bounds = new ArrayList<>();
+            int boundsCount = buf.readInt();
+            for (int j = 0; j < boundsCount; j++) {
+                bounds.add(new MutableBoundingBox(buf.readVarIntArray()));
+            }
+            Location.Source source = Location.Source.values()[buf.readInt()];
+
+            this.locations.put(id, new Location(pos, dimension, name, type, bounds, maxBounds, source));
         }
-        packetType = PacketType.values()[buf.readInt()];
+        this.packetType = PacketType.values()[buf.readInt()];
     }
 
     @Override
     public void toBytes(PacketBuffer buf) {
         buf.writeInt(locations.size());
-        for (Location location : locations) {
-            buf.writeLong(location.getID());
-            buf.writeLong(location.getPosition().toLong());
-            buf.writeString(location.getDimension().getRegistryName().toString());
-            buf.writeString(location.getName());
-            buf.writeString(location.getType().toString());
-            buf.writeVarIntArray(location.getBounds().toNBTTagIntArray().getIntArray());
-            buf.writeInt(location.getSource().ordinal());
+        for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
+            buf.writeLong(mapEntry.getKey());
+            buf.writeLong(mapEntry.getValue().getPosition().toLong());
+            buf.writeString(mapEntry.getValue().getDimension().getRegistryName().toString());
+            buf.writeString(mapEntry.getValue().getName());
+            buf.writeString(mapEntry.getValue().getType().toString());
+            buf.writeVarIntArray(mapEntry.getValue().getMaxBounds().toNBTTagIntArray().getIntArray());
+            buf.writeInt(mapEntry.getValue().getBounds().size());
+            for (MutableBoundingBox bounds : mapEntry.getValue().getBounds()) {
+                buf.writeVarIntArray(bounds.toNBTTagIntArray().getIntArray());
+            }
+            buf.writeInt(mapEntry.getValue().getSource().ordinal());
         }
         buf.writeInt(packetType.ordinal());
     }
@@ -73,21 +85,22 @@ public class LocationPacket implements IPacket {
 
             switch(packetType) {
                 case DISCOVER:
-                    for (Location location : locations) {
-                        LocationHelper.discover(playerEntity, location);
+                    for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
+                        LocationHelper.discover(playerEntity, mapEntry.getKey(), mapEntry.getValue());
                     }
                     break;
                 case UPDATE:
-                    for (Location location : locations) {
-                        LocationHelper.update(playerEntity, location);
-                    }                    break;
+                    for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
+                        LocationHelper.update(playerEntity, mapEntry.getKey(), mapEntry.getValue());
+                    }
+                    break;
                 case REMOVE:
-                    for (Location location : locations) {
-                        LocationHelper.remove(playerEntity, location);
+                    for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
+                        LocationHelper.remove(playerEntity, mapEntry.getKey(), mapEntry.getValue());
                     }                    break;
                 case SYNC:
-                    for (Location location : locations) {
-                        playerEntity.getCapability(LocationsCap.LOCATIONS_CAPABILITY).orElseThrow(() -> new IllegalArgumentException(playerEntity.getDisplayName().getString()+" missing locations capability")).discover(location);
+                    for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
+                        playerEntity.getCapability(LocationsCap.LOCATIONS_CAPABILITY).orElseThrow(() -> new IllegalArgumentException(playerEntity.getDisplayName().getString()+" missing locations capability")).discover(mapEntry.getKey(), mapEntry.getValue());
                     }
                     break;
             }
