@@ -4,7 +4,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
-public class LocationsConfig {
+public class Config {
     private static final ForgeConfigSpec.Builder CLIENT_BUILDER = new ForgeConfigSpec.Builder();
     public static final Client CLIENT = new Client(CLIENT_BUILDER);
     public static final ForgeConfigSpec clientSpec = CLIENT_BUILDER.build();
@@ -16,9 +16,11 @@ public class LocationsConfig {
     public static void save() {
         COMMON.serialize();
         commonSpec.save();
-        if (FMLEnvironment.dist == Dist.CLIENT) {
-            CLIENT.serialize();
-            clientSpec.save();
-        }
+        if (FMLEnvironment.dist == Dist.CLIENT) Config.saveClient();
+    }
+
+    private static void saveClient() {
+        CLIENT.serialize();
+        clientSpec.save();
     }
 }

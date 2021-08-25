@@ -16,7 +16,8 @@ public interface ILocationsCap extends INBTSerializable<ListNBT> {
 
     boolean discover(Long id, Location location);
     boolean update(Long id, Location location);
-    boolean remove(Long id, Location location);
+    //boolean remove(Long id, Location location);
+    boolean remove(Long id);
 
     boolean isDiscovered(Long id);
 }

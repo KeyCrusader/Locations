@@ -1,8 +1,12 @@
 package keyboardcrusader.locations;
 
-import keyboardcrusader.locations.config.LocationsConfig;
-import keyboardcrusader.locations.events.forge.ServerForgeEventHandler;
+import keyboardcrusader.locations.config.Config;
+import keyboardcrusader.locations.config.ConfigScreen;
+import keyboardcrusader.locations.events.AntiqueAtlasEventHandler;
+import keyboardcrusader.locations.events.WaystoneEventHandler;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
@@ -20,13 +24,15 @@ public class Locations {
     public static final String MODID = "locations";
 
     public Locations() {
-        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, LocationsConfig.clientSpec);
-        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, LocationsConfig.commonSpec);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Config.clientSpec);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.commonSpec);
 
-        if (ModList.get().isLoaded("waystones")) {
-            MinecraftForge.EVENT_BUS.register(ServerForgeEventHandler.WaystoneServerForgeEventHandler.class);
-        }
-        LocationsConfig.COMMON.SELENE_LOADED = ModList.get().isLoaded("selene");
-        LocationsConfig.COMMON.ANTIQUE_ATLAS_LOADED = ModList.get().isLoaded("antiqueatlas");
+        Config.COMMON.WAYSTONES_LOADED = ModList.get().isLoaded("waystones");
+        if (Config.COMMON.WAYSTONES_LOADED) MinecraftForge.EVENT_BUS.register(WaystoneEventHandler.class);
+
+        Config.COMMON.ANTIQUE_ATLAS_LOADED = ModList.get().isLoaded("antiqueatlas");
+        if (Config.COMMON.ANTIQUE_ATLAS_LOADED) MinecraftForge.EVENT_BUS.register(AntiqueAtlasEventHandler.class);
+
+        DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ConfigScreen::registerModsPage);
     }
 }

@@ -1,21 +1,27 @@
 package keyboardcrusader.locations.config;
 
+import keyboardcrusader.locations.Locations;
 import keyboardcrusader.locations.config.type.LocationInfo;
+import me.shedaniel.clothconfig2.forge.api.ConfigEntryBuilder;
+import me.shedaniel.clothconfig2.forge.gui.entries.MultiElementListEntry;
+import me.shedaniel.clothconfig2.forge.impl.builders.SubCategoryBuilder;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+import net.minecraftforge.fml.ModList;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class ConfigRegistry<V extends LocationInfo> {
     private final Map<ResourceLocation, V> names = new HashMap<>();
-    private final ResourceLocation defaultKey;
+    private ResourceLocation defaultKey;
 
-    public ConfigRegistry(V defaultValue) {
+    public void setDefault(V defaultValue) {
+        defaultKey = defaultValue.getRegistryName();
         registerOrUpdate(defaultValue);
-        this.defaultKey = defaultValue.getRegistryName();
     }
 
     public void registerIfEmpty(V value) {
@@ -37,6 +43,11 @@ public class ConfigRegistry<V extends LocationInfo> {
         return names.get(defaultKey);
     }
 
+    public Collection<V> getValues()
+    {
+        return Collections.unmodifiableCollection(this.names.values());
+    }
+
     public boolean exists(ResourceLocation key) {
         return names.containsKey(key);
     }
@@ -56,7 +67,13 @@ public class ConfigRegistry<V extends LocationInfo> {
         for (String location_info : strings) {
             String[] info = location_info.split("=");
 
-            V v = (V) supplier.get().setRegistryName(info[0]);
+            V v;
+            if (names.containsKey(new ResourceLocation(info[0]))) {
+                v = names.get(new ResourceLocation(info[0]));
+            }
+            else {
+                v = (V) supplier.get().setRegistryName(info[0]);
+            }
             v.deserializeClient(info[1]);
             registerOrUpdate(v);
         }
@@ -65,9 +82,46 @@ public class ConfigRegistry<V extends LocationInfo> {
         for (String location_info : strings) {
             String[] info = location_info.split("=");
 
-            V v = (V) supplier.get().setRegistryName(info[0]);
+            V v;
+            if (names.containsKey(new ResourceLocation(info[0]))) {
+                v = names.get(new ResourceLocation(info[0]));
+            }
+            else {
+                v = (V) supplier.get().setRegistryName(info[0]);
+            }
             v.deserializeCommon(info[1]);
             registerOrUpdate(v);
         }
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public Collection<SubCategoryBuilder> createEntries(ConfigEntryBuilder entryBuilder) {
+        Map<String, SubCategoryBuilder> subCategories = new TreeMap<>(Comparator.comparing(String::toLowerCase));
+
+        for (V info : getValues()) {
+            String namespace = info.getRegistryName().getNamespace();
+            String path = info.getRegistryName().getPath();
+            if (!subCategories.containsKey(namespace)) {
+                subCategories.put(namespace, entryBuilder.startSubCategory(new TranslationTextComponent(modNameFromID(namespace))).setExpanded(false));
+            }
+            subCategories.get(namespace).add(new MultiElementListEntry<>(
+                    new TranslationTextComponent(path),
+                    info,
+                    info.createEntries(entryBuilder),
+                    false)
+            );
+        }
+
+        return subCategories.values();
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    private static String modNameFromID(String id) {
+        for (ModInfo mod : ModList.get().getMods()) {
+            if (mod.getModId().equals(id)) {
+                return mod.getDisplayName();
+            }
+        }
+        return id;
     }
 }

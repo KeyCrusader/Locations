@@ -73,16 +73,16 @@ public class LocationsCap implements ILocationsCap {
     @Override
     public boolean update(Long id, Location location) {
         if (isDiscovered(id)) {
-            locations.put(id, location);
+            locations.get(id).update(location);
             return true;
         }
         return false;
     }
 
     @Override
-    public boolean remove(Long id, Location location) {
+    public boolean remove(Long id) {
         if (isDiscovered(id)) {
-            return locations.remove(id, location);
+            return locations.remove(id) != null;
         }
         return false;
     }

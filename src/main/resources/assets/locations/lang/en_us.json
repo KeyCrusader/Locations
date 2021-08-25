@@ -19,6 +19,9 @@
   "locations.config.atlas_marker": "Atlas Marker",
   "locations.config.atlas_marker.tooltip": "Marker to add to Antique Atlas (if installed)",
 
+  "locations.config.map_marker": "Map Marker",
+  "locations.config.map_marker.tooltip": "Marker to add to map",
+
   "locations.config.square_bounds": "Use square bounds",
   "locations.config.square_bounds.tooltip": "Use the chunk bounds instead of accurate piece bounds, useful for villages and other locations with gaps between parts",
 
@@ -28,10 +31,15 @@
   "locations.config.xp_modifier": "XP modifier",
   "locations.config.xp_modifier.tooltip": "XP modifier to use on discovery of this location",
 
-  "locations.config.connected": "Connected",
-  "locations.config.connected.tooltip": "Is this a multi block point, e.g. portal?",
+  "locations.config.multiBlock": "Multi block",
+  "locations.config.multiBlock.tooltip": "Is this a multi block point, e.g. portal?",
 
-  "locations.config.inLocation": "In location",
-  "locations.config.inLocation.tooltip": "Is the POI in a location, e.g. a villager workstation"
+  "locations.config.permanent": "Permanent",
+  "locations.config.permanent.tooltip": "Is the POI permanent or in a location, e.g. nether portal = true, a villager workstation = false",
 
+  "locations.config.hasPOIs": "Has POIs",
+  "locations.config.hasPOIs.tooltip": "Does the location have points of interest within it? e.g. village",
+
+  "locations.commands.missing": "Location has not been discovered",
+  "locations.commands.empty": "Not in a location"
 }

@@ -1,5 +1,6 @@
 package keyboardcrusader.locations.network;
 
+import com.google.common.collect.Lists;
 import keyboardcrusader.locations.api.LocationHelper;
 import keyboardcrusader.locations.capability.Location;
 import keyboardcrusader.locations.capability.LocationsCap;
@@ -9,27 +10,19 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MutableBoundingBox;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.network.NetworkEvent;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
 
 public class LocationPacket implements IPacket {
     private final Map<Long, Location> locations;
     private final PacketType packetType;
 
-    public LocationPacket(Long id, Location location, PacketType packetType) {
-        this.locations = new HashMap<>();
-        this.locations.put(id, location);
-        this.packetType = packetType;
-    }
     public LocationPacket(Map<Long, Location> locations, PacketType packetType) {
         this.locations = locations;
         this.packetType = packetType;
@@ -44,15 +37,17 @@ public class LocationPacket implements IPacket {
             RegistryKey<World> dimension = RegistryKey.getOrCreateKey(Registry.WORLD_KEY, new ResourceLocation(buf.readString()));
             String name = buf.readString();
             ResourceLocation type = ResourceLocation.tryCreate(buf.readString());
-            MutableBoundingBox maxBounds = new MutableBoundingBox(buf.readVarIntArray());
-            List<MutableBoundingBox> bounds = new ArrayList<>();
+            AxisAlignedBB maxBounds = LocationHelper.fromIntArray(buf.readVarIntArray());
+            Set<AxisAlignedBB> bounds = new HashSet<>();
             int boundsCount = buf.readInt();
             for (int j = 0; j < boundsCount; j++) {
-                bounds.add(new MutableBoundingBox(buf.readVarIntArray()));
+                bounds.add(LocationHelper.fromIntArray(buf.readVarIntArray()));
             }
             Location.Source source = Location.Source.values()[buf.readInt()];
+            boolean permanent = buf.readBoolean();
+            boolean enterable = buf.readBoolean();
 
-            this.locations.put(id, new Location(pos, dimension, name, type, bounds, maxBounds, source));
+            this.locations.put(id, new Location(pos, dimension, name, type, bounds, maxBounds, source, permanent, enterable));
         }
         this.packetType = PacketType.values()[buf.readInt()];
     }
@@ -66,12 +61,14 @@ public class LocationPacket implements IPacket {
             buf.writeString(mapEntry.getValue().getDimension().getRegistryName().toString());
             buf.writeString(mapEntry.getValue().getName());
             buf.writeString(mapEntry.getValue().getType().toString());
-            buf.writeVarIntArray(mapEntry.getValue().getMaxBounds().toNBTTagIntArray().getIntArray());
+            buf.writeVarIntArray(LocationHelper.toIntArrayNBT(mapEntry.getValue().getMaxBounds()).getIntArray());
             buf.writeInt(mapEntry.getValue().getBounds().size());
-            for (MutableBoundingBox bounds : mapEntry.getValue().getBounds()) {
-                buf.writeVarIntArray(bounds.toNBTTagIntArray().getIntArray());
+            for (AxisAlignedBB bounds : mapEntry.getValue().getBounds()) {
+                buf.writeVarIntArray(LocationHelper.toIntArrayNBT(bounds).getIntArray());
             }
             buf.writeInt(mapEntry.getValue().getSource().ordinal());
+            buf.writeBoolean(mapEntry.getValue().isPermanent());
+            buf.writeBoolean(mapEntry.getValue().isMultiBlock());
         }
         buf.writeInt(packetType.ordinal());
     }
@@ -83,21 +80,22 @@ public class LocationPacket implements IPacket {
             if (!(entity instanceof PlayerEntity)) throw new IllegalArgumentException("Entity not player");
             PlayerEntity playerEntity = (PlayerEntity) entity;
 
+            // Packets that are sent after a player has died, e.g. set spawn point
+            if (!playerEntity.isAlive()) return;
+
             switch(packetType) {
                 case DISCOVER:
-                    for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
-                        LocationHelper.discover(playerEntity, mapEntry.getKey(), mapEntry.getValue());
-                    }
+                    LocationHelper.discover(playerEntity, locations);
                     break;
                 case UPDATE:
-                    for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
-                        LocationHelper.update(playerEntity, mapEntry.getKey(), mapEntry.getValue());
-                    }
+                    LocationHelper.update(playerEntity, locations);
+                    break;
+                case RENAME:
+                    LocationHelper.rename(playerEntity, locations);
                     break;
                 case REMOVE:
-                    for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
-                        LocationHelper.remove(playerEntity, mapEntry.getKey(), mapEntry.getValue());
-                    }                    break;
+                    LocationHelper.remove(playerEntity, Lists.newArrayList(locations.keySet()));
+                    break;
                 case SYNC:
                     for (Map.Entry<Long, Location> mapEntry : locations.entrySet()) {
                         playerEntity.getCapability(LocationsCap.LOCATIONS_CAPABILITY).orElseThrow(() -> new IllegalArgumentException(playerEntity.getDisplayName().getString()+" missing locations capability")).discover(mapEntry.getKey(), mapEntry.getValue());
@@ -111,6 +109,7 @@ public class LocationPacket implements IPacket {
     public enum PacketType {
         DISCOVER,
         UPDATE,
+        RENAME,
         REMOVE,
         SYNC
     }

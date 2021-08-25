@@ -5,9 +5,7 @@
   "refmap": "locations.refmap.json",
   "mixins": [
     "ConfiguredFeatureMixin",
-    "MapDataMixin",
-    "ServerWorldMixin",
-    "StructureManagerMixin"
+    "ServerWorldMixin"
   ],
   "client": [
   ],

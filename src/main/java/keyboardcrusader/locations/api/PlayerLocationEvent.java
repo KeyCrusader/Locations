@@ -29,14 +29,20 @@ public class PlayerLocationEvent extends Event {
      */
     public static class Enter extends PlayerLocationEvent {
         private final Location location;
+        private final boolean discovery;
 
-        public Enter(PlayerEntity playerEntity, Location location) {
+        public Enter(PlayerEntity playerEntity, Location location, boolean discovery) {
             super(playerEntity);
             this.location = location;
+            this.discovery = discovery;
         }
 
         public Location getLocation() {
             return location;
+        }
+
+        public boolean isDiscovery() {
+            return discovery;
         }
     }
 }

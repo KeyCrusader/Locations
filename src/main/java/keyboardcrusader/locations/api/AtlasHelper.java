@@ -8,6 +8,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,21 +21,24 @@ public class AtlasHelper {
      * @param atlasID ID of the atlas, integer
      * @param world Current player world
      * @param pos Position to check for the marker
-     * @return True if the marker is found, otherwise false
+     * @return Integer list of all matching IDs
      */
-    public static boolean doesMarkerExist(ResourceLocation markerType, int atlasID, World world, BlockPos pos) {
+    public static List<Integer> getMarkerFromLocation(ResourceLocation markerType, int atlasID, World world, BlockPos pos) {
         DimensionMarkersData data = AntiqueAtlasMod.markersData.getMarkersData(atlasID, world)
                 .getMarkersDataInWorld(world.getDimensionKey());
 
+        List<Integer> idList = new ArrayList<>();
         List<Marker> markers = data.getMarkersAtChunk((pos.getX() >> 4) / MarkersData.CHUNK_STEP, (pos.getZ() >> 4) / MarkersData.CHUNK_STEP);
         if (markers != null) {
             for (Marker marker : markers) {
                 if (marker.getType().equals(markerType)) {
-                    // Found the marker.
-                    return true;
+                    if (marker.getX() == pos.getX() && marker.getZ() == pos.getZ()) {
+                        // Found the marker.
+                        idList.add(marker.getId());
+                    }
                 }
             }
         }
-        return false;
+        return idList;
     }
 }

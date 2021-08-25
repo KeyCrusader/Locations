@@ -3,19 +3,18 @@ package keyboardcrusader.locations.config;
 import com.google.common.collect.Lists;
 import keyboardcrusader.locations.LocationsRegistry;
 import keyboardcrusader.locations.config.type.FeatureInfo;
-import keyboardcrusader.locations.config.type.MapInfo;
+import keyboardcrusader.locations.config.type.LocationInfo;
 import keyboardcrusader.locations.config.type.POIInfo;
 import keyboardcrusader.locations.config.type.StructureInfo;
 import net.minecraftforge.common.ForgeConfigSpec;
 
-import java.util.*;
+import java.util.List;
 
 public class Common {
-    public boolean SELENE_LOADED;
+    public boolean WAYSTONES_LOADED;
     public boolean ANTIQUE_ATLAS_LOADED;
-    public final ForgeConfigSpec.BooleanValue DEATH_LOCATION;
+    protected final ForgeConfigSpec.ConfigValue<List<? extends String>> location_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> structure_info;
-    protected final ForgeConfigSpec.ConfigValue<List<? extends String>> map_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> feature_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> poi_info;
 
@@ -24,20 +23,15 @@ public class Common {
 
         builder.push("General");
 
-        DEATH_LOCATION = builder
-                .comment("Death location")
-                .translation("config.locations.death")
-                .define("death_location", true);
-
-        structure_info = builder
+        location_info = builder
                 .comment("Location settings")
                 .translation("config.locations.settings")
                 .defineList("location_info", Lists.newArrayList(), it -> it instanceof String);
 
-        map_info = builder
-                .comment("Location settings")
+        structure_info = builder
+                .comment("Structure settings")
                 .translation("config.locations.settings")
-                .defineList("map_info", Lists.newArrayList(), it -> it instanceof String);
+                .defineList("structure_info", Lists.newArrayList(), it -> it instanceof String);
 
         feature_info = builder
                 .comment("Location settings")
@@ -51,15 +45,15 @@ public class Common {
     }
 
     public void serialize() {
+        location_info.set(LocationsRegistry.LOCATIONS.serializeCommon());
         structure_info.set(LocationsRegistry.STRUCTURES.serializeCommon());
-        map_info.set(LocationsRegistry.MAP_MARKERS.serializeCommon());
         feature_info.set(LocationsRegistry.FEATURES.serializeCommon());
         poi_info.set(LocationsRegistry.POIS.serializeCommon());
     }
 
     public void deserialize() {
+        LocationsRegistry.LOCATIONS.deserializeCommon(location_info.get(), LocationInfo::new);
         LocationsRegistry.STRUCTURES.deserializeCommon(structure_info.get(), StructureInfo::new);
-        LocationsRegistry.MAP_MARKERS.deserializeCommon(map_info.get(), MapInfo::new);
         LocationsRegistry.FEATURES.deserializeCommon(feature_info.get(), FeatureInfo::new);
         LocationsRegistry.POIS.deserializeCommon(poi_info.get(), POIInfo::new);
     }

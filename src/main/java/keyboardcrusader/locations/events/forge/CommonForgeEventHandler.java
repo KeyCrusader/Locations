@@ -3,6 +3,7 @@ package keyboardcrusader.locations.events.forge;
 import keyboardcrusader.locations.Locations;
 import keyboardcrusader.locations.capability.ILocationsCap;
 import keyboardcrusader.locations.capability.LocationsCap;
+import keyboardcrusader.locations.commands.LocationCommand;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.ListNBT;
 import net.minecraft.util.Direction;
@@ -13,6 +14,7 @@ import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.capabilities.ICapabilitySerializable;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
@@ -57,4 +59,8 @@ public class CommonForgeEventHandler {
         }
     }
 
+    @SubscribeEvent
+    public static void registerCommands(final RegisterCommandsEvent event) {
+        LocationCommand.register(event.getDispatcher());
+    }
 }

@@ -6,6 +6,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.village.PointOfInterestType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.server.ServerLifecycleHooks;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -16,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 // Fires an event when a point of interest is created or removed
+// During world creation this is on a separate thread so defer to main server thread
 
 @Mixin(ServerWorld.class)
 public abstract class ServerWorldMixin {
@@ -23,16 +25,18 @@ public abstract class ServerWorldMixin {
 
     @Inject(method = "onBlockStateChange", at = @At("TAIL"))
     private void pointOfInterestUpdated(BlockPos pos, BlockState blockStateIn, BlockState newState, CallbackInfo ci) {
-        Optional<PointOfInterestType> optional = PointOfInterestType.forState(blockStateIn);
-        Optional<PointOfInterestType> optional1 = PointOfInterestType.forState(newState);
-        if (!Objects.equals(optional, optional1)) {
-            BlockPos blockpos = pos.toImmutable();
-            optional.ifPresent((type) -> {
-                MinecraftForge.EVENT_BUS.post(new PointOfInterestEvent.Removed(type, getWorld(), blockpos));
-            });
-            optional1.ifPresent((type) -> {
-                MinecraftForge.EVENT_BUS.post(new PointOfInterestEvent.Created(type, getWorld(), blockpos));
-            });
-        }
+        ServerLifecycleHooks.getCurrentServer().deferTask(() -> {
+            Optional<PointOfInterestType> optional = PointOfInterestType.forState(blockStateIn);
+            Optional<PointOfInterestType> optional1 = PointOfInterestType.forState(newState);
+            if (!Objects.equals(optional, optional1)) {
+                BlockPos blockpos = pos.toImmutable();
+                optional.ifPresent((type) -> {
+                    MinecraftForge.EVENT_BUS.post(new PointOfInterestEvent.Removed(type, getWorld(), blockpos));
+                });
+                optional1.ifPresent((type) -> {
+                    MinecraftForge.EVENT_BUS.post(new PointOfInterestEvent.Created(type, getWorld(), blockpos));
+                });
+            }
+        });
     }
 }

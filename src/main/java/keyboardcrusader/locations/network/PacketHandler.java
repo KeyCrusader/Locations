@@ -19,7 +19,6 @@ public class PacketHandler {
 
         HANDLER.registerMessage(id++, LocationPacket.class, LocationPacket::toBytes, LocationPacket::new, LocationPacket::handle);
         HANDLER.registerMessage(id++, CurrentLocationPacket.class, CurrentLocationPacket::toBytes, CurrentLocationPacket::new, CurrentLocationPacket::handle);
-        HANDLER.registerMessage(id++, MapPacket.class, MapPacket::toBytes, MapPacket::new, MapPacket::handle);
     }
 }
 

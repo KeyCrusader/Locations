@@ -3,33 +3,34 @@ package keyboardcrusader.locations.config;
 import com.google.common.collect.Lists;
 import keyboardcrusader.locations.LocationsRegistry;
 import keyboardcrusader.locations.config.type.FeatureInfo;
-import keyboardcrusader.locations.config.type.MapInfo;
+import keyboardcrusader.locations.config.type.LocationInfo;
 import keyboardcrusader.locations.config.type.POIInfo;
 import keyboardcrusader.locations.config.type.StructureInfo;
 import net.minecraftforge.common.ForgeConfigSpec;
 
-import java.util.*;
+import java.util.List;
 
 public class Client {
+    protected final ForgeConfigSpec.ConfigValue<List<? extends String>> location_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> structure_info;
-    protected final ForgeConfigSpec.ConfigValue<List<? extends String>> map_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> feature_info;
     protected final ForgeConfigSpec.ConfigValue<List<? extends String>> poi_info;
+    public final ForgeConfigSpec.ConfigValue<Boolean> SHOW_SCREEN;
 
     Client(ForgeConfigSpec.Builder builder) {
         builder.comment("Configuration for Locations").push("Client");
 
         builder.push("General");
 
-        structure_info = builder
+        location_info = builder
                 .comment("Location settings")
                 .translation("config.locations.settings")
                 .defineList("location_info", Lists.newArrayList(), it -> it instanceof String);
 
-        map_info = builder
-                .comment("Location settings")
+        structure_info = builder
+                .comment("Structure settings")
                 .translation("config.locations.settings")
-                .defineList("map_info", Lists.newArrayList(), it -> it instanceof String);
+                .defineList("structure_info", Lists.newArrayList(), it -> it instanceof String);
 
         feature_info = builder
                 .comment("Location settings")
@@ -40,18 +41,23 @@ public class Client {
                 .comment("Location settings")
                 .translation("config.locations.settings")
                 .defineList("poi_info", Lists.newArrayList(), it -> it instanceof String);
+
+        SHOW_SCREEN = builder
+                .comment("Show screen")
+                .translation("config.locations.settings")
+                .define("show_screen", true);
     }
 
     public void serialize() {
+        location_info.set(LocationsRegistry.LOCATIONS.serializeClient());
         structure_info.set(LocationsRegistry.STRUCTURES.serializeClient());
-        map_info.set(LocationsRegistry.MAP_MARKERS.serializeClient());
         feature_info.set(LocationsRegistry.FEATURES.serializeClient());
         poi_info.set(LocationsRegistry.POIS.serializeClient());
     }
 
     public void deserialize() {
+        LocationsRegistry.LOCATIONS.deserializeClient(location_info.get(), LocationInfo::new);
         LocationsRegistry.STRUCTURES.deserializeClient(structure_info.get(), StructureInfo::new);
-        LocationsRegistry.MAP_MARKERS.deserializeClient(map_info.get(), MapInfo::new);
         LocationsRegistry.FEATURES.deserializeClient(feature_info.get(), FeatureInfo::new);
         LocationsRegistry.POIS.deserializeClient(poi_info.get(), POIInfo::new);
     }

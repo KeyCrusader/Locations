@@ -11,18 +11,22 @@ import java.util.function.Supplier;
 
 public class CurrentLocationPacket implements IPacket {
     private final Long id;
+    private final boolean discovery;
 
-    public CurrentLocationPacket(Long id) {
+    public CurrentLocationPacket(Long id, boolean discovery) {
         this.id = id;
+        this.discovery = discovery;
     }
 
     public CurrentLocationPacket(PacketBuffer buf) {
         id = buf.readLong();
+        discovery = buf.readBoolean();
     }
 
     @Override
     public void toBytes(PacketBuffer buf) {
         buf.writeLong(id);
+        buf.writeBoolean(discovery);
     }
 
     @Override
@@ -32,7 +36,7 @@ public class CurrentLocationPacket implements IPacket {
             if (!(entity instanceof PlayerEntity)) throw new IllegalArgumentException("Entity not player");
             PlayerEntity playerEntity = (PlayerEntity) entity;
 
-            LocationHelper.setCurrentLocation(playerEntity, id);
+            LocationHelper.setCurrentLocation(playerEntity, id, discovery);
         });
         ctx.get().setPacketHandled(true);
     }

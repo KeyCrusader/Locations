@@ -1,9 +1,18 @@
 package keyboardcrusader.locations.config.type;
 
+import com.google.common.collect.Lists;
 import keyboardcrusader.locations.Locations;
 import keyboardcrusader.locations.LocationsRegistry;
 import keyboardcrusader.locations.api.NameGenerator;
+import me.shedaniel.clothconfig2.forge.api.AbstractConfigListEntry;
+import me.shedaniel.clothconfig2.forge.api.ConfigEntryBuilder;
+import me.shedaniel.clothconfig2.forge.impl.builders.DropdownMenuBuilder;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.text.TranslationTextComponent;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
+
+import java.util.List;
 
 public class StructureInfo extends LocationInfo {
     private boolean useSquareBounds;
@@ -65,7 +74,7 @@ public class StructureInfo extends LocationInfo {
         super.deserializeCommon(string);
         String[] strings = string.split(";");
         setUseSquareBounds(Boolean.parseBoolean(strings[1]));
-        setNameGenerator(LocationsRegistry.NAME_GENERATORS.getValue(ResourceLocation.tryCreate(strings[2])));
+        setNameGenerator(LocationsRegistry.NAME_GENERATORS.getValue(new ResourceLocation(strings[2])));
         setXpModifier(Float.parseFloat(strings[3]));
         setHasPOIs(Boolean.parseBoolean(strings[4]));
     }
@@ -82,4 +91,36 @@ public class StructureInfo extends LocationInfo {
         return super.equals(info);
     }
 
+    @OnlyIn(Dist.CLIENT)
+    @Override
+    public List<AbstractConfigListEntry<?>> createEntries(ConfigEntryBuilder builder) {
+        List<AbstractConfigListEntry<?>> entries = super.createEntries(builder);
+        // Square bounds
+        entries.add(builder.startBooleanToggle(new TranslationTextComponent("locations.config.square_bounds"), useSquareBounds())
+                .setDefaultValue(false)
+                .setSaveConsumer(this::setUseSquareBounds)
+                .setTooltip(new TranslationTextComponent("locations.config.square_bounds.tooltip"))
+                .build());
+        // XP modifier
+        entries.add(builder.startFloatField(new TranslationTextComponent("locations.config.xp_modifier"), getXPModifier())
+                .setDefaultValue(1.0F)
+                .setSaveConsumer(this::setXpModifier)
+                .setTooltip(new TranslationTextComponent("locations.config.xp_modifier.tooltip"))
+                .build());
+        // Name generator
+        entries.add(builder.startDropdownMenu(new TranslationTextComponent("locations.config.name_generator"), DropdownMenuBuilder.TopCellElementBuilder.of(getNameGenerator().getRegistryName(), ResourceLocation::tryCreate))
+                .setDefaultValue(LocationsRegistry.NAME_GENERATORS.getDefaultKey())
+                .setSelections(Lists.newArrayList(LocationsRegistry.NAME_GENERATORS.getKeys()))
+                .setSuggestionMode(false)
+                .setSaveConsumer(resourceLocation -> setNameGenerator(LocationsRegistry.NAME_GENERATORS.getValue(resourceLocation)))
+                .setTooltip(new TranslationTextComponent("locations.config.name_generator.tooltip"))
+                .build());
+        // Has POIs
+        entries.add(builder.startBooleanToggle(new TranslationTextComponent("locations.config.hasPOIs"), hasPOIs())
+                .setDefaultValue(false)
+                .setSaveConsumer(this::setHasPOIs)
+                .setTooltip(new TranslationTextComponent("locations.config.hasPOIs.tooltip"))
+                .build());
+        return entries;
+    }
 }

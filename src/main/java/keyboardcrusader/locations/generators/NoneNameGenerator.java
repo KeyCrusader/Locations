@@ -16,6 +16,7 @@ public class NoneNameGenerator extends NameGenerator {
         return Arrays.stream(registryName.toString().split(":")[1]
                 .replaceAll("_", " ")
                 .split("\\s+"))
-                .map(t -> t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase()).collect(Collectors.joining(" "));
+                .map(t -> t.substring(0, 1).toUpperCase() + t.substring(1).toLowerCase())
+                .collect(Collectors.joining(" "));
     }
 }

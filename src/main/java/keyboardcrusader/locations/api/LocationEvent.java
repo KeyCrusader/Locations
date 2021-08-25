@@ -41,8 +41,15 @@ public class LocationEvent extends Event {
      * Called whenever a location is updated, triggered by players and worlds
      */
     public static class Update extends LocationEvent {
-        public Update(ICapabilityProvider discoverer, Long id, Location location) {
+        private final Location oldLocation;
+
+        public Update(ICapabilityProvider discoverer, Long id, Location location, Location oldLocation) {
             super(discoverer, id, location);
+            this.oldLocation = oldLocation;
+        }
+
+        public Location getOldLocation() {
+            return oldLocation;
         }
     }
 
@@ -52,6 +59,22 @@ public class LocationEvent extends Event {
     public static class Remove extends LocationEvent {
         public Remove(ICapabilityProvider discoverer, Long id, Location location) {
             super(discoverer, id, location);
+        }
+    }
+
+    /**
+     * Called whenever a location is renamed
+     */
+    public static class Rename extends LocationEvent {
+        private final String oldName;
+
+        public Rename(ICapabilityProvider discoverer, Long id, Location location, String oldName) {
+            super(discoverer, id, location);
+            this.oldName = oldName;
+        }
+
+        public String getOldName() {
+            return this.oldName;
         }
     }
 }
