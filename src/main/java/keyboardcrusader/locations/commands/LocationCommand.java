@@ -21,8 +21,6 @@ import net.minecraft.util.text.TranslationTextComponent;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.capabilities.ICapabilityProvider;
 
-import java.util.ArrayList;
-
 public class LocationCommand {
     public static final SimpleCommandExceptionType LOCATION_MISSING_EXCEPTION = new SimpleCommandExceptionType(new TranslationTextComponent("locations.commands.missing"));
     public static final SimpleCommandExceptionType LOCATION_CURRENT_EMPTY = new SimpleCommandExceptionType(new TranslationTextComponent("locations.commands.empty"));

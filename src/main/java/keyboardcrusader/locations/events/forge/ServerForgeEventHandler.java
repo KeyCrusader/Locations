@@ -179,17 +179,12 @@ public class ServerForgeEventHandler {
                     if (!LocationHelper.isDiscovered(world, id)) {
                         if (!location.getInfo().isDisabled()) {
                             LocationHelper.discover(world, id, location);
-                            Locations.LOGGER.debug("Discover: " + location);
                         }
                     }
                     else {
                         Location storedLocation = LocationHelper.get(world, id);
                         if (!storedLocation.equals(location)) {
                             LocationHelper.updateGlobal(world, new HashMap<Long, Location>(){{put(id, location);}});
-                            Locations.LOGGER.debug("Update: " + storedLocation);
-                        }
-                        else {
-                            Locations.LOGGER.debug("Match: " + storedLocation);
                         }
                     }
                 }
@@ -225,7 +220,7 @@ public class ServerForgeEventHandler {
                 // Send POIs
                 Map<Long, Location> poiMap = new HashMap<>();
                 ((ServerWorld) event.getPlayer().getEntityWorld()).getPointOfInterestManager().getInSquare(
-                        PointOfInterestType.ANY_VILLAGER_WORKSTATION,
+                        PointOfInterestType.MATCH_ANY,
                         new BlockPos(event.getLocation().getMaxBounds().minX, event.getLocation().getMaxBounds().minY, event.getLocation().getMaxBounds().minZ),
                         (int) Math.max(event.getLocation().getMaxBounds().getXSize(), event.getLocation().getMaxBounds().getZSize()),
                         PointOfInterestManager.Status.ANY).forEach(poi -> {
@@ -283,16 +278,5 @@ public class ServerForgeEventHandler {
         long id = LocationHelper.generateID(event.getType().getRegistryName(), event.getWorld().getDimensionKey(), positionLocation.getPosition());
 
         LocationHelper.removeGlobal(event.getWorld(), Lists.newArrayList(id));
-
-        /*if (LocationHelper.isDiscovered(event.getWorld(), id)) {
-            Location location = LocationHelper.get(event.getWorld(), id);
-            LocationHelper.remove(event.getWorld(), id, location);
-        }
-
-        event.getWorld().getPlayers().forEach(playerEntity -> {
-            if (LocationHelper.isDiscovered(playerEntity, id)) {
-                LocationHelper.remove(playerEntity, id, LocationHelper.get(playerEntity, id));
-            }
-        });*/
     }
 }

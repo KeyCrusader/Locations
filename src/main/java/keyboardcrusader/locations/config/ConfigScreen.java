@@ -38,7 +38,7 @@ public class ConfigScreen {
                 entryBuilder.startBooleanToggle(new TranslationTextComponent("locations.config.screen"), Config.CLIENT.SHOW_SCREEN.get())
                         .setDefaultValue(true)
                         .setSaveConsumer(Config.CLIENT.SHOW_SCREEN::set)
-                        .setTooltip(new TranslationTextComponent("locations.config.screen"))
+                        .setTooltip(new TranslationTextComponent("locations.config.screen.tooltip"))
                         .build());
         LocationsRegistry.LOCATIONS.createEntries(entryBuilder).forEach(abstractConfigListEntry -> general.addEntry(abstractConfigListEntry.build()));
 

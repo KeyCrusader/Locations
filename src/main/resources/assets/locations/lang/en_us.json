@@ -17,7 +17,7 @@
   "locations.config.render_distance.tooltip": "Distance to render this location from if used with other mods",
 
   "locations.config.atlas_marker": "Atlas Marker",
-  "locations.config.atlas_marker.tooltip": "Marker to add to Antique Atlas (if installed)",
+  "locations.config.atlas_marker.tooltip": "Marker to add to Antique Atlas",
 
   "locations.config.map_marker": "Map Marker",
   "locations.config.map_marker.tooltip": "Marker to add to map",
@@ -39,6 +39,9 @@
 
   "locations.config.hasPOIs": "Has POIs",
   "locations.config.hasPOIs.tooltip": "Does the location have points of interest within it? e.g. village",
+
+  "locations.config.screen": "Show overlay",
+  "locations.config.screen.tooltip": "Show the name of the location when discovering/entering",
 
   "locations.commands.missing": "Location has not been discovered",
   "locations.commands.empty": "Not in a location"
